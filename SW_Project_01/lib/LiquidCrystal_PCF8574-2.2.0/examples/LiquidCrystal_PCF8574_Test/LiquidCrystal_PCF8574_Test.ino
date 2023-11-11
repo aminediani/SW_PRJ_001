@@ -18,7 +18,7 @@ byte dotOn[] = { 0b00000, 0b01110, 0b11111, 0b11111,
 void setup() {
   int error;
 
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("LCD...");
 
   // wait on Serial to be available on Leonardo
