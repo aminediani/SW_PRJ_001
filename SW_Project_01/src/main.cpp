@@ -13,7 +13,7 @@ void RFID_test();
 
 static int counter = 0;
 bool tagPresence = 0;
-int inByte = 11211;
+
 // Setup function
 void setup() {
   
@@ -25,8 +25,6 @@ void setup() {
   init_7seg();
   init_RFID();
   Serial.println("Init Done...");
-
-
 }
 
 //Main Loop
@@ -50,7 +48,7 @@ void RFID_test(){
   Serial.println(getValue_RFID());
 
   delay(1000);
-    setData_RFID(inByte);
+    setData_RFID(10999);
   }
   
   
