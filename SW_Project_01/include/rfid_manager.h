@@ -18,3 +18,5 @@ String dump_byte_array_string(byte *buffer, byte bufferSize);
 String getData_RFID();
 void setData_RFID(int value);
 void splitIntegerToByteArray(uint32_t intValue, byte* byteArray);
+int getValue_RFID();
+int combineByteArrayToValue(byte* byteArray, int arraySize);
