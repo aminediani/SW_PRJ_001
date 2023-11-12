@@ -1,5 +1,8 @@
 #include <TM1637Display.h>
 
- void showValue7seg(TM1637Display display, float num);
- void clear7seg(TM1637Display display);
- void init7seg( TM1637Display display);
+#define CLK_7seg 9
+#define DIO_7seg 8
+
+ void showValue7seg( float num);
+ void clear7seg();
+void init_7seg();

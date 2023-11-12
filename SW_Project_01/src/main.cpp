@@ -1,25 +1,18 @@
 #include <Arduino.h>
-#include <LiquidCrystal_PCF8574.h>
 #include "display7seg_manager.h"
 #include "LCD_manager.h"
-
-//#include <string.h>
-
-// 7seg Module connection pins (Digital Pins)
-#define CLK_7seg 9
-#define DIO_7seg 8
+#include "rfid_manager.h"
 
 #define TEST_DELAY 500
-
-
 
 // Function declaration
 void dig7seg_test();
 void crystal_Test();
 void I2C_Scanner(int address);
+void RFID_test();
 
 static int counter = 0;
-
+bool tagPresence = 0;
 // Setup function
 void setup() {
   
@@ -28,6 +21,8 @@ void setup() {
   delay(1000);
 
   init_LCD();
+  init_7seg();
+  init_RFID();
   Serial.println("Init Done...");
 
 
@@ -35,19 +30,27 @@ void setup() {
 
 //Main Loop
 void loop() {
+
     Serial.println("loop...");
-    delay(1000);
-    //dig7seg_test();
+    delay(100);
+    dig7seg_test();
     crystal_Test();
+    RFID_test();
+}
+void RFID_test(){
+
+bool tagPresence = check_presence;
+Serial.println("Tag present = "+String(tagPresence));
+
 }
 
 // digital 7 seg Test
 void dig7seg_test(){
-  // float value = 12.34f;
-  // showValue7seg(display,value);
-  // delay(TEST_DELAY);
-  // clear7seg(display);
-  // delay(TEST_DELAY);
+  float value = 12.34f+((float)counter)*0.1;
+  showValue7seg(value);
+  delay(TEST_DELAY);
+  //clear7seg();
+  //delay(TEST_DELAY);
 }
 
 // LCD crystal test
@@ -58,6 +61,7 @@ void crystal_Test(){
 
 }
 
+//I2C 
 void I2C_Scanner(int address){
   
   int error;
