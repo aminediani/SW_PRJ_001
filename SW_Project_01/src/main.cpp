@@ -13,6 +13,7 @@ void RFID_test();
 
 static int counter = 0;
 bool tagPresence = 0;
+int inByte = 0;
 // Setup function
 void setup() {
   
@@ -38,9 +39,21 @@ void loop() {
     RFID_test();
 }
 void RFID_test(){
+  bool tagPresence = 0;
 
-bool tagPresence = check_presence;
-Serial.println("Tag present = "+String(tagPresence));
+  tagPresence = check_new_Card_Presence();
+  if(tagPresence){
+  Serial.println("Tag is present ");
+  Serial.println(getID_RFID());
+  Serial.println(getData_RFID());
+  delay(1000);
+    if (Serial.available() > 0) {
+    inByte = Serial.read();
+    Serial.println(inByte);
+    
+    }
+    setData_RFID(inByte);
+  }
 
 }
 
