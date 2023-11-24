@@ -2,7 +2,7 @@
 #include <MFRC522.h>
 
 #define SS_PIN 10
-#define RST_PIN 7
+#define RST_PIN 8
 #define blockAddr 4
 
 
