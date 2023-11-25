@@ -13,22 +13,22 @@ void RFID_test();
 void ledStatus(String LED_COLOR, bool LED_STAT);
 void updatButtonStatus();
 void Freq_Meter();
+void application_SW();
 
 static int counter = 0;
-bool tagPresence = 0;
-bool startButton = false;
-bool stopButton = false;
-String RFID_ID="";
+bool tagPresence = 0, recheck_new_tag = 1;
+// bool startButton = false;
+// bool stopButton = false;
+String RFID_ID = "";
 int Fuel_Solde = 0;
-bool user_access = 0,Vann_state = 0;
+bool user_access = 0, Vann_state = 0;
 int Liquid_Flow = 0;
 
-
 int startPin = 4;
-int buzzer_Pin = A2, Red_LED_PIN = 3, Green_LED_PIN = 6, VANN_Relay_Pin = 7;
+int buzzer_Pin = A2, Red_LED_PIN = 6, Green_LED_PIN = 3, VANN_Relay_Pin = 7;
 int stopPin = 5;
 const byte FlowMeterPin = 2;
-int count=0;
+int count = 0;
 int bFlag = 0;
 // Setup function
 void setup()
@@ -44,9 +44,8 @@ void setup()
 	delay(50);
 	digitalWrite(buzzer_Pin, LOW);
 
-
 	pinMode(FlowMeterPin, INPUT_PULLUP);
-  	attachInterrupt(digitalPinToInterrupt(FlowMeterPin), Freq_Meter, RISING);
+	attachInterrupt(digitalPinToInterrupt(FlowMeterPin), Freq_Meter, RISING);
 
 	Serial.begin(9600);
 	Serial.println("Start...");
@@ -59,69 +58,11 @@ void setup()
 // Main Loop
 void loop()
 {
-	showTextLine1("Put your Tag");
-
-	tagPresence = check_new_Card_Presence();
-
-	if (tagPresence == 1)
-	{
-		showTextLine1("Tag detected");
-
-
-		RFID_ID = getID_RFID();
-		Fuel_Solde = getValue_RFID();();
-		if (Fuel_Solde > 0)
-		{
-			user_access = 1;
-		}
-		else
-		{
-			user_access = 0;
-		}
-	}
-
-	if (user_access == 1)
-	{
-
-		showTextLine1("Fuel = " + String(Fuel_Solde));
-		if (Vann_state == HIGH)
-		{
-			digitalWrite(Red_LED_PIN, LOW);
-			digitalWrite(Green_LED_PIN, HIGH);
-		}
-
-		while (Fuel_Solde > 0 && Vann_state == HIGH)
-		{
-			digitalWrite(VANN_Relay_Pin, HIGH);
-			Liquid_Flow = count*2;
-			Fuel_Solde = Fuel_Solde - Liquid_Flow;
-			delay(300);
-			showValue7seg(Liquid_Flow);
-			setData_RFID(Fuel_Solde);
-			if (Fuel_Solde <= 0)
-			{
-				break;
-			}
-		}
-
-		if (Vann_state == LOW)
-		{
-			Vanne_Controle = LOW;
-		}
-	
-		if (digitalRead(startPin) )
-		{
-			Vann_state = HIGH;
-		}
-		if (digitalRead(stopButton) )
-		{
-			Vann_state = LOW;
-		}
-	}
-
-	// updatButtonStatus();
-	// ledStatus("green",startButton);
-	// ledStatus("red",stopButton);
+	application_SW();
+	delay(1500);
+	Serial.println("Counter = " + String(count));
+	if (count > 200)
+		count = 0;
 
 	// Serial.println("loop...");
 	// delay(300);
@@ -141,12 +82,12 @@ void RFID_test()
 		digitalWrite(A2, LOW);
 		Serial.println("Tag is present ");
 		Serial.println(getID_RFID());
-		Serial.println(getData_RFID());
+		// Serial.println(getData_RFID());
 		Serial.print("the returned value is = ");
 		Serial.println(getValue_RFID());
 
 		delay(1000);
-		setData_RFID(10999);
+		// setData_RFID(10999);
 	}
 }
 
@@ -168,8 +109,9 @@ void crystal_Test()
 	counter++;
 }
 
-void Freq_Meter() {
-  count +=1;
+void Freq_Meter()
+{
+	count += 1;
 }
 // I2C
 void I2C_Scanner(int address)
@@ -204,16 +146,152 @@ void ledStatus(String LED_COLOR, bool LED_STAT)
 	}
 }
 
-void updatButtonStatus()
+// void updatButtonStatus()
+// {
+// 	if (digitalRead(startPin) && bFlag == 0)
+// 	{
+// 		// bFlag = 1;
+// 		startButton = !startButton;
+// 	}
+// 	if (digitalRead(stopPin) && bFlag == 0)
+// 	{
+// 		// bFlag = 1;
+// 		stopButton = !stopButton;
+// 	}
+// }
+
+void application_SW()
 {
-	if (digitalRead(startPin) && bFlag == 0)
+	Serial.println("-----");
+
+	if (!tagPresence)
 	{
-		// bFlag = 1;
-		startButton = !startButton;
+		showTextLine1("Put your Tag");
+		user_access = 0;
+		Serial.println("tag not detected");
 	}
-	if (digitalRead(stopPin) && bFlag == 0)
+
+	// check_new_Card_Presence();
+	if ((!tagPresence) || recheck_new_tag)
 	{
-		// bFlag = 1;
-		stopButton = !stopButton;
+		Serial.println("check new tag");
+		halt_RFID();
+		tagPresence = check_new_Card_Presence();
+		if (tagPresence == 1)
+			recheck_new_tag = 0;
+	}
+
+	Serial.println("check presnec //" + String(tagPresence));
+
+	// 	if (digitalRead(stopPin))
+	// {
+	// Serial.println("pesent forced");
+
+	// 	tagPresence = 1;
+	// }
+
+	if (tagPresence == 1)
+	{
+		digitalWrite(A2, HIGH);
+		delay(100);
+		digitalWrite(A2, LOW);
+		showTextLine1("Tag detected");
+		Serial.println("tag detected");
+		RFID_ID = getID_RFID();
+
+		int value_of_read = getValue_RFID();
+		if (value_of_read == 99)
+		{
+
+			// error state
+			Serial.println("99 Error state");
+
+			tagPresence = 0;
+			recheck_new_tag = 1;
+			user_access = 0;
+			showValue7seg(0.00f);
+			return;
+		}
+		else
+		{
+			Serial.println("GOOD VALUE");
+			Fuel_Solde = value_of_read;
+		}
+
+		showValue7seg((float)Fuel_Solde / 1000);
+		if (Fuel_Solde > 0)
+		{
+			user_access = 1;
+			Serial.println("- Get access");
+		}
+		else
+		{
+			Serial.println("- Block access");
+			user_access = 0;
+		}
+	}
+
+	if (user_access == 1)
+	{
+		showTextLine1("Fuel = " + String(Fuel_Solde));
+
+		// change the state of electrovanne to high
+		if (digitalRead(startPin))
+		{
+			Serial.println("vanne state High");
+			Vann_state = HIGH;
+		}
+
+		// change the state of electrovanne to low
+		if (digitalRead(stopPin))
+		{
+			Serial.println("vanne state Low");
+			Vann_state = LOW;
+		}
+
+		if (Vann_state == HIGH)
+		{
+			digitalWrite(Red_LED_PIN, LOW);
+			digitalWrite(Green_LED_PIN, HIGH);
+		}
+		else
+		{
+			digitalWrite(Red_LED_PIN, HIGH);
+			digitalWrite(Green_LED_PIN, LOW);
+		}
+
+		while (Fuel_Solde > 0 && Vann_state == HIGH)
+		{
+			digitalWrite(VANN_Relay_Pin, HIGH);
+			Liquid_Flow = count * 2;
+
+			if (Fuel_Solde < Liquid_Flow ){
+				Fuel_Solde = 0;
+				Vann_state = LOW;
+				digitalWrite(Red_LED_PIN, HIGH);
+				digitalWrite(Green_LED_PIN, LOW);
+			}
+			else
+				Fuel_Solde = Fuel_Solde - Liquid_Flow;
+
+			showTextLine1("FL " + String(Liquid_Flow));
+			count=0;
+			showValue7seg(((float)Fuel_Solde) / 1000);
+			setData_RFID(Fuel_Solde);
+
+			if (digitalRead(stopPin))
+			{
+				Serial.println("vanne state Low");
+				Vann_state = LOW;
+				digitalWrite(Red_LED_PIN, HIGH);
+				digitalWrite(Green_LED_PIN, LOW);
+			}
+			delay(1000);
+		}
+
+		if (Vann_state == LOW)
+		{
+			digitalWrite(VANN_Relay_Pin, LOW);
+		}
 	}
 }

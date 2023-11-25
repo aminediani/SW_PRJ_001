@@ -7,16 +7,14 @@
 
 
 bool check_new_Card_Presence();
-
 void init_RFID();
-
 String getID_RFID();
-
 void dump_byte_array(byte *buffer, byte bufferSize);
-
 String dump_byte_array_string(byte *buffer, byte bufferSize);
 String getData_RFID();
 void setData_RFID(int value);
 void splitIntegerToByteArray(uint32_t intValue, byte* byteArray);
 int getValue_RFID();
 int combineByteArrayToValue(byte* byteArray, int arraySize);
+bool Check_presence();
+void halt_RFID();

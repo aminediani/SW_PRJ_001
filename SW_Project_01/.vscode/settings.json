@@ -67,6 +67,7 @@
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
-  "C_Cpp.errorSquiggles": "disabled",
-  "cmake.options.statusBarVisibility": "visible"
+  "C_Cpp.errorSquiggles": "enabled",
+  "cmake.options.statusBarVisibility": "visible",
+  "cmake.sourceDirectory": "D:/XPS/GITHUB_PROJECT/SW_PRJ_001/SW_Project_01/.pio/libdeps/nanoatmega328/Unity"
 }

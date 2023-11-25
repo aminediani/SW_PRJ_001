@@ -1578,7 +1578,7 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		if (isSectorTrailer) {
 			status = PCD_Authenticate(PICC_CMD_MF_AUTH_KEY_A, firstBlock, key, uid);
 			if (status != STATUS_OK) {
-				Serial.print(F("PCD_Authenticate() failed: "));
+				Serial.print(F("PCD_Authenticate() 2 failed: "));
 				Serial.println(GetStatusCodeName(status));
 				return;
 			}

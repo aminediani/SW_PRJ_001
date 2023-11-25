@@ -8,8 +8,15 @@ MFRC522::StatusCode status;
 
 bool check_new_Card_Presence()
 {
+    // byte bufferATQA[10];
+    // byte bufferSize[10];
     bool val;
     val = mfrc522.PICC_IsNewCardPresent();
+    // if (val)
+    // {
+    //     val = mfrc522.PICC_WakeupA(bufferATQA, bufferSize);
+    //     //mfrc522.PICC_HaltA();
+    // }
     return val;
 }
 
@@ -31,14 +38,40 @@ void init_RFID()
     dump_byte_array(key.keyByte, MFRC522::MF_KEY_SIZE);
 }
 
-String getID_RFID(){
+String getID_RFID()
+{
     String TagID = "";
     mfrc522.PICC_ReadCardSerial();
     TagID = dump_byte_array_string(mfrc522.uid.uidByte, mfrc522.uid.size);
     return TagID;
 }
 
-void dump_byte_array(byte *buffer, byte bufferSize){
+bool Check_presence()
+{
+    if (mfrc522.PICC_ReadCardSerial())
+    {
+        String TagID = "";
+        TagID = dump_byte_array_string(mfrc522.uid.uidByte, mfrc522.uid.size);
+        // Halt PICC
+        mfrc522.PICC_HaltA();
+        return 1;
+    }
+    else
+    { // Halt PICC
+        mfrc522.PICC_HaltA();
+        return 0;
+    }
+}
+
+void halt_RFID()
+{
+        mfrc522.PICC_HaltA();
+        // Stop encryption on PCD
+        mfrc522.PCD_StopCrypto1();
+}
+
+void dump_byte_array(byte *buffer, byte bufferSize)
+{
     for (byte i = 0; i < bufferSize; i++)
     {
         Serial.print(buffer[i] < 0x10 ? " 0" : " ");
@@ -47,7 +80,8 @@ void dump_byte_array(byte *buffer, byte bufferSize){
     Serial.println();
 }
 
-String dump_byte_array_string(byte *buffer, byte bufferSize){
+String dump_byte_array_string(byte *buffer, byte bufferSize)
+{
     // String text = String(bufferSize)+"HEX: ";
     String hex_text = "";
     for (byte i = 0; i < bufferSize; i++)
@@ -65,6 +99,7 @@ String getData_RFID()
     byte size = sizeof(buffer);
     byte trailerBlock = 7;
     byte sector = 1;
+    //mfrc522.PICC_ReadCardSerial();
 
     // Authenticate using key A
     // Serial.println(F("Authenticating using key A..."));
@@ -73,6 +108,8 @@ String getData_RFID()
     {
         Serial.print(F("PCD_Authenticate() failed: "));
         Serial.println(mfrc522.GetStatusCodeName(status));
+        //halt
+
         return ""; // todo
     }
 
@@ -88,6 +125,7 @@ String getData_RFID()
         Serial.println(mfrc522.GetStatusCodeName(status));
     }
     // Serial.print(F("Data in block ")); Serial.print(blockAddr); Serial.println(F(":"));
+    //halt
     return dump_byte_array_string(buffer, 16);
 }
 
@@ -134,21 +172,18 @@ void setData_RFID(int value)
             Serial.println(mfrc522.GetStatusCodeName(status));
         }
     }
-    // Halt PICC
-    mfrc522.PICC_HaltA();
-    // Stop encryption on PCD
-    mfrc522.PCD_StopCrypto1();
+
 }
 
 void splitIntegerToByteArray(uint32_t intValue, byte *byteArray)
 {
-    //Serial.print("converted value: ");
+    // Serial.print("converted value: ");
     for (int i = 0; i < 4; ++i)
     {
         // Use bitwise operations to extract each byte
         byteArray[i] = (intValue >> (i * 8)) & 0xFF;
 
-        //Serial.print(byteArray[i], HEX);
+        // Serial.print(byteArray[i], HEX);
     }
     Serial.println();
 }
@@ -158,7 +193,8 @@ int getValue_RFID()
     byte buffer[18];
     byte size = sizeof(buffer);
     byte trailerBlock = 7;
-    byte sector = 1;
+    // byte sector = 1;
+    //mfrc522.PICC_ReadCardSerial();
 
     // Authenticate using key A
     // Serial.println(F("Authenticating using key A..."));
@@ -167,6 +203,7 @@ int getValue_RFID()
     {
         Serial.print(F("PCD_Authenticate() failed: "));
         Serial.println(mfrc522.GetStatusCodeName(status));
+        // Halt PICC
         return 99; // todo
     }
 
@@ -187,10 +224,13 @@ int getValue_RFID()
     if (sizeof(buffer) >= 16)
     {
         byte bytearrayread[] = {buffer[3], buffer[2], buffer[1], buffer[0]};
-        
-
+        // Halt PICC
         return combineByteArrayToValue(bytearrayread, sizeof(bytearrayread));
     }
+    // Halt PICC
+    mfrc522.PICC_HaltA();
+    // Stop encryption on PCD
+    mfrc522.PCD_StopCrypto1();
     return 99;
 }
 
@@ -198,10 +238,10 @@ int combineByteArrayToValue(byte *bytes, int size)
 {
     int result = 0;
 
-    for (size_t i = size; i > 0; --i) {
+    for (size_t i = size; i > 0; --i)
+    {
         result = (result << 8) | bytes[i - 1];
-       // Serial.println(bytes[i],HEX);
-
+        // Serial.println(bytes[i],HEX);
     }
     return result;
 }
