@@ -4,6 +4,7 @@
 #include "rfid_manager.h"
 
 #define TEST_DELAY 500
+#define DL_1 200
 
 // Function declaration
 void dig7seg_test();
@@ -11,18 +12,19 @@ void crystal_Test();
 void I2C_Scanner(int address);
 void RFID_test();
 void ledStatus(String LED_COLOR, bool LED_STAT);
-void updatButtonStatus();
 void Freq_Meter();
 void application_SW();
 
 static int counter = 0;
 bool tagPresence = 0, recheck_new_tag = 1;
+int error_counter = 0;
 // bool startButton = false;
 // bool stopButton = false;
 String RFID_ID = "";
 int Fuel_Solde = 0;
 bool user_access = 0, Vann_state = 0;
 int Liquid_Flow = 0;
+int saving_counter = 0;
 
 int startPin = 4;
 int buzzer_Pin = A2, Red_LED_PIN = 6, Green_LED_PIN = 3, VANN_Relay_Pin = 7;
@@ -59,10 +61,10 @@ void setup()
 void loop()
 {
 	application_SW();
-	delay(1500);
+	delay(DL_1);
 	Serial.println("Counter = " + String(count));
-	if (count > 200)
-		count = 0;
+	// if (count > 200)
+	// 	count = 0;
 
 	// Serial.println("loop...");
 	// delay(300);
@@ -77,16 +79,14 @@ void RFID_test()
 	tagPresence = check_new_Card_Presence();
 	if (tagPresence)
 	{
-		digitalWrite(A2, HIGH);
-		delay(100);
-		digitalWrite(A2, LOW);
+
 		Serial.println("Tag is present ");
 		Serial.println(getID_RFID());
 		// Serial.println(getData_RFID());
 		Serial.print("the returned value is = ");
 		Serial.println(getValue_RFID());
 
-		delay(1000);
+		delay(DL_1);
 		// setData_RFID(10999);
 	}
 }
@@ -146,27 +146,19 @@ void ledStatus(String LED_COLOR, bool LED_STAT)
 	}
 }
 
-// void updatButtonStatus()
-// {
-// 	if (digitalRead(startPin) && bFlag == 0)
-// 	{
-// 		// bFlag = 1;
-// 		startButton = !startButton;
-// 	}
-// 	if (digitalRead(stopPin) && bFlag == 0)
-// 	{
-// 		// bFlag = 1;
-// 		stopButton = !stopButton;
-// 	}
-// }
-
 void application_SW()
 {
+	Serial.println("-----");
+	Serial.println("-----");
 	Serial.println("-----");
 
 	if (!tagPresence)
 	{
-		showTextLine1("Put your Tag");
+		error_counter++;
+		if(error_counter>3){
+			showTextLine1("Put your Tag");
+			clear7seg();
+		}
 		user_access = 0;
 		Serial.println("tag not detected");
 	}
@@ -174,7 +166,8 @@ void application_SW()
 	// check_new_Card_Presence();
 	if ((!tagPresence) || recheck_new_tag)
 	{
-		Serial.println("check new tag");
+		
+			Serial.println("check new tag");
 		halt_RFID();
 		tagPresence = check_new_Card_Presence();
 		if (tagPresence == 1)
@@ -186,16 +179,15 @@ void application_SW()
 	// 	if (digitalRead(stopPin))
 	// {
 	// Serial.println("pesent forced");
-
 	// 	tagPresence = 1;
 	// }
 
 	if (tagPresence == 1)
 	{
-		digitalWrite(A2, HIGH);
-		delay(100);
-		digitalWrite(A2, LOW);
-		//showTextLine1("Tag detected");
+		// digitalWrite(buzzer_Pin, HIGH);
+		// delay(50);
+		// digitalWrite(buzzer_Pin, LOW);
+		// showTextLine1("Tag detected");
 		Serial.println("tag detected");
 		RFID_ID = getID_RFID();
 
@@ -203,22 +195,25 @@ void application_SW()
 		if (value_of_read == 99)
 		{
 			// error state
+			
 			Serial.println("99 Error state");
-			halt_RFID();
-			tagPresence = check_new_Card_Presence();
-			if (tagPresence)
-				Serial.println("recovred");
-			else
-			{
-				tagPresence = 0;
-				recheck_new_tag = 1;
-				user_access = 0;
-				showValue7seg(0.00f);
-				return;
-			}
+			// halt_RFID();
+			// tagPresence = check_new_Card_Presence();
+			// if (tagPresence)
+			// 	Serial.println("recovred");
+			// else
+			// {
+			// 	tagPresence = 0;
+			// 	recheck_new_tag = 1;
+			// 	user_access = 0;
+			// 	if(!recheck_new_tag)
+			// 		showValue7seg(0.00f);
+			// 	return;
+			// }
 		}
 		else
 		{
+			error_counter=0;
 			Serial.println("GOOD VALUE");
 			Fuel_Solde = value_of_read;
 		}
@@ -238,7 +233,7 @@ void application_SW()
 
 	if (user_access == 1)
 	{
-		showTextLine1("Fuel = " + String(Fuel_Solde));
+		showTextLine1("Sold = " + String(Fuel_Solde)+"mL");
 
 		// change the state of electrovanne to high
 		if (digitalRead(startPin))
@@ -268,7 +263,7 @@ void application_SW()
 		while (Fuel_Solde > 0 && Vann_state == HIGH)
 		{
 			digitalWrite(VANN_Relay_Pin, HIGH);
-			Liquid_Flow = count * 2;
+			Liquid_Flow = count * 2.08;
 
 			if (Fuel_Solde < Liquid_Flow)
 			{
@@ -280,10 +275,19 @@ void application_SW()
 			else
 				Fuel_Solde = Fuel_Solde - Liquid_Flow;
 
-			showTextLine1("FL " + String(Liquid_Flow));
+			showTextLine1("debit : " + String(Liquid_Flow));
 			count = 0;
 			showValue7seg(((float)Fuel_Solde) / 1000);
-			setData_RFID(Fuel_Solde);
+			saving_counter++;
+			if (saving_counter > 10|| Fuel_Solde == 0 )
+			{
+				saving_counter = 0;
+				setData_RFID(Fuel_Solde);
+				Serial.println("data sync to tag");
+				digitalWrite(buzzer_Pin, HIGH);
+				delay(50);
+				digitalWrite(buzzer_Pin, LOW);
+			}
 
 			if (digitalRead(stopPin))
 			{
@@ -292,7 +296,7 @@ void application_SW()
 				digitalWrite(Red_LED_PIN, HIGH);
 				digitalWrite(Green_LED_PIN, LOW);
 			}
-			delay(1000);
+			delay(DL_1);
 		}
 
 		if (Vann_state == LOW)
