@@ -195,22 +195,27 @@ void application_SW()
 		digitalWrite(A2, HIGH);
 		delay(100);
 		digitalWrite(A2, LOW);
-		showTextLine1("Tag detected");
+		//showTextLine1("Tag detected");
 		Serial.println("tag detected");
 		RFID_ID = getID_RFID();
 
 		int value_of_read = getValue_RFID();
 		if (value_of_read == 99)
 		{
-
 			// error state
 			Serial.println("99 Error state");
-
-			tagPresence = 0;
-			recheck_new_tag = 1;
-			user_access = 0;
-			showValue7seg(0.00f);
-			return;
+			halt_RFID();
+			tagPresence = check_new_Card_Presence();
+			if (tagPresence)
+				Serial.println("recovred");
+			else
+			{
+				tagPresence = 0;
+				recheck_new_tag = 1;
+				user_access = 0;
+				showValue7seg(0.00f);
+				return;
+			}
 		}
 		else
 		{
@@ -265,7 +270,8 @@ void application_SW()
 			digitalWrite(VANN_Relay_Pin, HIGH);
 			Liquid_Flow = count * 2;
 
-			if (Fuel_Solde < Liquid_Flow ){
+			if (Fuel_Solde < Liquid_Flow)
+			{
 				Fuel_Solde = 0;
 				Vann_state = LOW;
 				digitalWrite(Red_LED_PIN, HIGH);
@@ -275,7 +281,7 @@ void application_SW()
 				Fuel_Solde = Fuel_Solde - Liquid_Flow;
 
 			showTextLine1("FL " + String(Liquid_Flow));
-			count=0;
+			count = 0;
 			showValue7seg(((float)Fuel_Solde) / 1000);
 			setData_RFID(Fuel_Solde);
 
