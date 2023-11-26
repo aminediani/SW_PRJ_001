@@ -129,7 +129,7 @@ String getData_RFID()
     return dump_byte_array_string(buffer, 16);
 }
 
-void setData_RFID(int value)
+bool setData_RFID(int value)
 {
     if (value > 65535)
     {
@@ -156,6 +156,7 @@ void setData_RFID(int value)
         Serial.print(F("PCD_Authenticate() failed: "));
         Serial.println(mfrc522.GetStatusCodeName(status));
         flag = true;
+
     }
     if (!flag)
     {
@@ -170,8 +171,11 @@ void setData_RFID(int value)
         {
             Serial.print(F("MIFARE_Write() failed: "));
             Serial.println(mfrc522.GetStatusCodeName(status));
+
         }
+     
     }
+    return !flag;
 
 }
 

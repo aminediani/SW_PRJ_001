@@ -25,6 +25,7 @@ int Fuel_Solde = 0;
 bool user_access = 0, Vann_state = 0;
 int Liquid_Flow = 0;
 int saving_counter = 0;
+int error_saving_counter = 1;
 
 int startPin = 4;
 int buzzer_Pin = A2, Red_LED_PIN = 6, Green_LED_PIN = 3, VANN_Relay_Pin = 7;
@@ -43,7 +44,7 @@ void setup()
 	pinMode(stopPin, INPUT);
 
 	digitalWrite(buzzer_Pin, HIGH);
-	delay(50);
+	delay(150);
 	digitalWrite(buzzer_Pin, LOW);
 
 	pinMode(FlowMeterPin, INPUT_PULLUP);
@@ -167,7 +168,7 @@ void application_SW()
 	if ((!tagPresence) || recheck_new_tag)
 	{
 		
-			Serial.println("check new tag");
+		Serial.println("check new tag");
 		halt_RFID();
 		tagPresence = check_new_Card_Presence();
 		if (tagPresence == 1)
@@ -197,19 +198,21 @@ void application_SW()
 			// error state
 			
 			Serial.println("99 Error state");
+			//error_counter++;
+
 			// halt_RFID();
 			// tagPresence = check_new_Card_Presence();
 			// if (tagPresence)
 			// 	Serial.println("recovred");
 			// else
-			// {
-			// 	tagPresence = 0;
-			// 	recheck_new_tag = 1;
-			// 	user_access = 0;
-			// 	if(!recheck_new_tag)
-			// 		showValue7seg(0.00f);
-			// 	return;
-			// }
+			{
+				tagPresence = 0;
+				recheck_new_tag = 1;
+				user_access = 0;
+				if(!recheck_new_tag)
+					showValue7seg(0.00f);
+				return;
+			}
 		}
 		else
 		{
@@ -282,15 +285,17 @@ void application_SW()
 			if (saving_counter > 10|| Fuel_Solde == 0 )
 			{
 				saving_counter = 0;
-				setData_RFID(Fuel_Solde);
-				Serial.println("data sync to tag");
+				error_saving_counter = setData_RFID(Fuel_Solde);
+				Serial.println("data sync to tag/error: "+String(error_saving_counter));
 				digitalWrite(buzzer_Pin, HIGH);
 				delay(50);
 				digitalWrite(buzzer_Pin, LOW);
 			}
 
-			if (digitalRead(stopPin))
+
+			if (digitalRead(stopPin)|| (!error_saving_counter))
 			{
+				error_saving_counter = 1;
 				Serial.println("vanne state Low");
 				Vann_state = LOW;
 				digitalWrite(Red_LED_PIN, HIGH);
