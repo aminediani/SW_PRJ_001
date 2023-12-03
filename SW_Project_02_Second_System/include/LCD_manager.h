@@ -4,4 +4,6 @@
 
 
 void showTextLine1(String text);
+void showTextLine2(String text);
+void showText(String text1, String text2);
 void init_LCD();
