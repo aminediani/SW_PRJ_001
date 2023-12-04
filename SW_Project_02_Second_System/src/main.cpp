@@ -55,6 +55,7 @@ void setup()
 // Main Loop
 void loop()
 {
+	good_val_err=0;
 	delay(50);
 	// streamSold();
 	showTextLine1("Set Sold " + String(sold) + " L");
@@ -121,11 +122,13 @@ void Tag_reset(int sold)
 						recheck_new_tag = 1;
 						user_access = 0;
 						good_value = 0;
+						
 					}
 				}
 				else
 				{
 					Serial.println("GOOD VALUE");
+					good_val_err=0;
 					good_value = 1;
 					Fuel_Solde = value_of_read;
 					showText("Set Sold " + String(sold) + " L", "Sold :" + String((float)Fuel_Solde / 1000) + " L");
@@ -138,6 +141,7 @@ void Tag_reset(int sold)
 			{
 
 				Serial.println("check new tag");
+				good_val_err++;
 				halt_RFID();
 				tagPresence = check_new_Card_Presence();
 				if (tagPresence == 1)
@@ -146,6 +150,8 @@ void Tag_reset(int sold)
 				showTextLine1("Set Sold " + String(sold) + " L");
 			}
 
+			if (good_val_err>=3)
+				return;
 			delay(20);
 		}
 
