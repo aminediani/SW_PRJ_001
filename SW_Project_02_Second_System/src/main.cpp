@@ -34,9 +34,12 @@ int count = 0;
 int bFlag = 0;
 int sold = 5;
 int pushpin = A0;
+bool good_value = 0;
+int good_val_err = 0;
 // Setup function
 void setup()
 {
+	
 
 	pinMode(pushpin, INPUT);
 	Serial.begin(9600);
@@ -45,6 +48,8 @@ void setup()
 	// init_7seg();
 	init_RFID();
 	Serial.println("Init Done...");
+	showText("   E-BlueTek    ","  Tag  Charger  ");
+	delay(1500);
 }
 
 // Main Loop
@@ -95,10 +100,10 @@ void Tag_reset(int sold)
 	delay(50);
 	recheck_new_tag = 0;
 	tagPresence = check_new_Card_Presence();
-	
+
 	if (tagPresence)
 	{
-		while (!digitalRead(pushpin))
+		while (!digitalRead(pushpin)|| !good_value)
 		{
 			if (tagPresence == 1)
 			{
@@ -115,11 +120,13 @@ void Tag_reset(int sold)
 						tagPresence = 0;
 						recheck_new_tag = 1;
 						user_access = 0;
+						good_value = 0;
 					}
 				}
 				else
 				{
 					Serial.println("GOOD VALUE");
+					good_value = 1;
 					Fuel_Solde = value_of_read;
 					showText("Set Sold " + String(sold) + " L", "Sold :" + String((float)Fuel_Solde / 1000) + " L");
 				}
@@ -135,34 +142,62 @@ void Tag_reset(int sold)
 				tagPresence = check_new_Card_Presence();
 				if (tagPresence == 1)
 					recheck_new_tag = 0;
+				
 				showTextLine1("Set Sold " + String(sold) + " L");
 			}
 
 			delay(20);
 		}
 
-		Serial.println("Tag is present ");
-		Serial.println(getID_RFID());
-		Serial.println(getData_RFID());
-		// Serial.print("the returned value is = ");
-		// Serial.println(getValue_RFID());
+		// Serial.println("Tag is present ");
+		// Serial.println(getID_RFID());
+		// Serial.println(getData_RFID());
+		//  Serial.print("the returned value is = ");
+		//  Serial.println(getValue_RFID());
 		showTextLine1("WAIT...");
 		delay(1000);
 		succes_operat = setData_RFID(sold * 1000);
+		int write_counter = 0;
+		while (((!succes_operat) && write_counter <= 3)||write_counter == 0)
+		{
+
+			if (succes_operat)
+			{
+				showTextLine1("Tag is charged");
+				delay(1000);
+				break;
+			}
+			else
+			{
+				showTextLine1("Error Try again!");
+				succes_operat = setData_RFID(sold * 1000);
+				Serial.println("Try..." + String(write_counter));
+				if (!succes_operat)
+					write_counter++;
+				// if(write_counter <= 10)
+				delay(100);
+				// wdt_disable();
+				// wdt_enable(WDTO_15MS);
+				// while (1)
+				// {
+				// }
+			}
+		}
+
 		if (succes_operat)
 		{
-			showTextLine1("Tag is charged");
-			delay(2000);
+			showText("Tag is charged","New Sold "+String(sold)+" L");
+			delay(2500);
 		}
 		else
 		{
-			showTextLine1("Error Try again!");
-			delay(2000);
-			wdt_disable();
-			wdt_enable(WDTO_15MS);
-			while (1)
-			{
-			}
+			showText("Error Try again!","Wait...");
+			delay(1000);
+			// wdt_disable();
+			// wdt_enable(WDTO_15MS);
+			// while (1)
+			// {
+			// }
 		}
 	}
 }
