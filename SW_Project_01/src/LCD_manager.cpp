@@ -12,6 +12,17 @@ void showTextLine1(String text)
     lcd.print(text);
 }
 
+void showText(String text1, String text2)
+{
+    lcd.setBacklight(255);
+    lcd.home();
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print(text1);
+    lcd.setCursor(0,1);
+    lcd.print(text2);
+}
+
 void init_LCD()
 {
 

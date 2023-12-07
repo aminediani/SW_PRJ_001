@@ -56,6 +56,12 @@ void setup()
 	init_7seg();
 	init_RFID();
 	Serial.println("Init Done...");
+	showText("     Welcome    ","  Flow Control  ");
+					digitalWrite(buzzer_Pin, HIGH);
+				delay(100);
+				digitalWrite(buzzer_Pin, LOW);
+	delay(1000);
+
 }
 
 // Main Loop
@@ -231,6 +237,7 @@ void application_SW()
 		{
 			Serial.println("- Block access");
 			user_access = 0;
+			showText("Tag is Empty! ", "Tag Sold = 0 L");
 		}
 	}
 
@@ -282,14 +289,14 @@ void application_SW()
 			count = 0;
 			showValue7seg(((float)Fuel_Solde) / 1000);
 			saving_counter++;
-			if (saving_counter > 10|| Fuel_Solde == 0 )
+			if (saving_counter > 5|| Fuel_Solde == 0 )//old counter 10
 			{
 				saving_counter = 0;
 				error_saving_counter = setData_RFID(Fuel_Solde);
 				Serial.println("data sync to tag/error: "+String(error_saving_counter));
-				digitalWrite(buzzer_Pin, HIGH);
+				//digitalWrite(buzzer_Pin, HIGH);
 				delay(50);
-				digitalWrite(buzzer_Pin, LOW);
+				//digitalWrite(buzzer_Pin, LOW);
 			}
 
 
@@ -307,6 +314,7 @@ void application_SW()
 		if (Vann_state == LOW)
 		{
 			digitalWrite(VANN_Relay_Pin, LOW);
+	
 		}
 	}
 }

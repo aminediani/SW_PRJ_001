@@ -48,7 +48,7 @@ void setup()
 	// init_7seg();
 	init_RFID();
 	Serial.println("Init Done...");
-	showText("   E-BlueTek    ","  Tag  Charger  ");
+	showText("    Welcome     ","  Tag  Charger  ");
 	delay(1500);
 }
 
